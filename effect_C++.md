@@ -26,7 +26,7 @@
     }
   ```
   * **Initialization** is the process of giving an object its first value. For objects generated from structs and classes, initialization is performed by constructors.
-  * A **default constructor** is one that can be called without any arguments. Such a constructor either has no parameters or has a default value for every parameter.
+  * A **default constructor** is one that can be called w**ithout any arguments**. Such a constructor either has no parameters or has a default value for every parameter.
   ```cpp
     class A {
       public:
@@ -78,3 +78,73 @@
     if(hasAcceptablequality(aWidget)) {}
   ```
   The parameter `w` is passed to `hasAcceptableQuality` by value, so in the call above, `aWidget` is copied into `w`. The copying is done by Widget's copy constructor. **Pass-by-value means "call the copy constructor."** (However, it's generally a bad idea to pass user-defined types by value. Pass-by-reference-to-const is typically a better choice.)
+
+## Item 1: View C++ as a federation of languages.
+  Today's C++ is a *multiparadigm programming language* , one supporting a combination of procedural（命令式）, object-oriented, functional, generic（范型）, and metaprogramming features.
+  To make sense of C++, you have to recognize its primary sublanguages. Fortunately, there are only four:
+  * **C.** C++ is still based on C. Blocks, statements, the preprocessor, built-in data types, arrays, points, etc., all come from C.
+  * **Object-Oriented C++.** This part of C++ is what C with Classes was all about: classes (including constructors and destructors), encapsulation（封装）, inheritance（继承）, polymorphism（多态）, virtual functions (dynamic binding), etc.
+  * **Template C++.** This is the generic programming part of C++.
+  * **The STL.** The STL is a template library.
+  
+## Item 2: Prefer consts, enums, and inlines to #defines
+  This Item might better be called "prefer the compiler to the preprocessor".
+  * For simple constants, prefer `const` objects or enums to #defines.
+  * For function-like macros, prefer inline functions to #defines.
+## Item 3: Use `const` whenever possible.
+  ```cpp
+    char greeting[] = "hello";
+    char *p = greeting; // non-const pointer, no-const data
+
+    const char *p = greeting; // non-const pointer, const data
+
+    char * const p = greeting; // const pointer, non-const data
+
+    const char * const p = greeting; // const pointer, const data
+  ```
+  If the word `const` appears to the left of the asterisk(* 星号), what's pointed to is constant; if the word `const` appears to the right of the asterisk, the pointer itself is constant; if `const` appears on both sides, both are constant.
+
+  STL iterators are modeled on pointers, so an iterator acts much like a `T*` pointer. Declaring a iteratror `const` is like declaring a pointer `const`(i.e., declaring a `T* const pointer`): the iterator isn't allowed to point to something different, but the thing it points to may be modified. If you want an iterator that points to something that can't be modified (i.e., the STL analogue of a `const T* pointer`), you want a const_iterator:
+  ```cpp
+    std::vector<int> vec;
+    // ..
+    const std::vector<int>::iterator iter = vec.begin(); // iter acts like a T* const
+    *iter = 10; // ok, changes what iter points to
+    ++iter; // error! iter is const
+
+    std::vector<int>::const_iterator clter = vec.begin(); // clter acts like a const T*
+    *clter = 10; // error! *clter is const
+    ++clter; // fine, changes clter
+  ```
+  * `const` Member Functions
+    The purpose of `const` on member functions is to identify which member functions may be invoked on `const` objects.
+    - They make the interface of a class easier to understand. It's important to know which functions may modify an object an which may not.
+    - They make it possible to work with `const` objects.
+  ```cpp
+    class TextBlock{
+      public:
+        //...
+        const char& operator[](std::size_t position) const {
+          return text[position];  // operator[] for const objects
+        }
+        char& operator[](std::size_t position) {
+          return text[position]; // operator[] for non-const objects
+        }
+      private:
+        std::string text;
+    };
+
+    TextBlock tb("hello");
+    std::cout << tb[0]; // call non-const TextBlock::operator[]
+
+    const TextBlock ctb("World");
+    std::cout << ctb[0]; // calls const TextBlock::operator[]
+  ```
+
+
+
+
+
+
+
+
